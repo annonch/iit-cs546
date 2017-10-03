@@ -1,4 +1,5 @@
 /* function prototypes */
+int timeval_sub(struct timeval *result, struct timeval end, struct timeval start);
 void setup(int argc, char **argv);
 void usage();
 void run();
@@ -16,3 +17,6 @@ void back_sub();
 void print_result();
 void *poutine(void* pthread_data);
 void *poutine2(void* pthread_data);
+float set_exec_time(int end);
+void start_exec_timer();
+float print_exec_timer();

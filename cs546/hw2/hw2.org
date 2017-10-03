@@ -60,7 +60,7 @@ This method avoids the over-creation of pthreads while maintaining correctness.
 
 Empirical data shows
     N                1         10        50        100         500       700
-avg_time_pthreads 2  
+avg_time_pthreads 2  0.017 ms  140 ms    3400 ms  
 avg_time_pthreads 1  0.017 ms  2.1 ms    39 ms     153 ms      4100 ms   8650 ms
 avg_time_seq         0.017 ms  0.067 ms  0.95 ms   5.2 ms      192 ms    470 ms
 

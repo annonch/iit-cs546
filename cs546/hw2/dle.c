@@ -231,6 +231,46 @@ void print_data() {
   printf("            __|\n");
 }
 
+/* new clock */
+/* timing code is from stackoverflow */
+/* https://stackoverflow.com/questions/459691/best-timing-method-in-c */
+
+int timeval_sub(struct timeval *result, struct timeval end, struct timeval start) {
+  if (start.tv_usec < end.tv_usec) {
+    int nsec = (end.tv_usec - start.tv_usec) / 1000000 + 1;
+    end.tv_usec -= 1000000 * nsec;                                                                       end.tv_sec += nsec;                                                                                }                                                                                                    if (start.tv_usec - end.tv_usec > 1000000) {                                                           int nsec = (end.tv_usec - start.tv_usec) / 1000000;                                                  end.tv_usec += 1000000 * nsec;                                                                       end.tv_sec -= nsec;                                                                                }                                                                                                    result->tv_sec = end.tv_sec - start.tv_sec;                                                          result->tv_usec = end.tv_usec - start.tv_usec;
+  return end.tv_sec < start.tv_sec;
+}
+
+float set_exec_time(int end) {
+  static struct timeval time_start;
+  struct timeval time_end;
+  struct timeval time_diff;
+  if (end) {
+    gettimeofday(&time_end, NULL);
+    if (timeval_subtract(&time_diff, time_end, time_start) == 0) {
+      if (end == 1)
+	//printf("\nexec time: %1.2fs\n", time_diff.tv_sec + (time_diff.tv_usec / 1000000.0f));
+	return time_diff.tv_sec + (time_diff.tv_usec / 1000000.0f)
+      else if (end == 2)
+	printf("%1.2fs",
+	       time_diff.tv_sec + (time_diff.tv_usec / 1000000.0f));
+    }
+    return -1;
+  }
+  gettimeofday(&time_start, NULL);
+  return 0;
+}
+
+void start_exec_timer() {
+  set_exec_time(0);
+}
+
+float print_exec_timer() {
+  return set_exec_time(1);
+}
+
+
 clock_t getTime() {
   return clock();
 }
