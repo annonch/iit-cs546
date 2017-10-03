@@ -1,0 +1,15 @@
+#+TITLE: cs546 hw2 Shared Memory Programming
+#+AUTHOR: Christopher Hannon
+#+EMAIL: channon@iit.edu 
+
+# How to install:
+gcc -o dle ./dle.c
+
+# Usage:
+./dle mode size_of_N
+Where mode = 0-3
+0 - sequential
+1 - pthreads
+2 - openmp
+3 - Test all
+and N = [1-1000] the size of the matrix A

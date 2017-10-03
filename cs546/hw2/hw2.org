@@ -1,0 +1,66 @@
+#+TITLE: cs546 hw2 Shared Memory Programming
+#+AUTHOR: Christopher Hannon
+#+EMAIL: channon@iit.edu 
+
+# How to install:
+gcc -pthread -o dle ./dle.c
+
+# Usage:
+./dle mode size_of_N
+Where mode = 0-3
+0 - sequential
+1 - pthreads
+2 - openmp
+3 - Test all (not implemented)
+and N = [1-1000] the size of the matrix A
+
+Algorithms:
+
+pthreads 1:
+
+In the first implementation of pthreads algorithm there are N-1 rounds.
+In each round N-1-#elapsed_rounds pthreads are created. 
+Each pthread eliminates one column of one row.
+After completion, the main thread waits for each pthread to return. 
+The running time is O(N^3/p).
+  /*                                                                                           
+   * x x x x x      x x x x x     x x x x x     x x x x x     x x x x x                        
+   * x x x x x      o x x x x     o x x x x     o x x x x     o x x x x                        
+   * x x x x x -->  o x x x x --> o o x x x --> o o x x x --> o o x x x                        
+   * x x x x x      o x x x x     o o x x x     o o o x x     o o o x x                        
+   * x x x x x      o x x x x     o o x x x     o o o x x     o o o o x                        
+   *     0              1             2             3             4                            
+   */
+
+Empirical data shows 
+    N              1         10        50        100         500       700
+avg_time_pthreads  0.017 ms  2.1 ms    39 ms     153 ms      4100 ms   8650 ms
+avg_time_seq       0.017 ms  0.067 ms  0.95 ms   5.2 ms      192 ms    470 ms
+
+
+The benefit to this approach is that since each pthread is responsible for one row there is no issues with two threads accessing the same memory.
+On the other hand the problem with this approach is that too many threads are created and destroyed.
+This overhead outweighs the gains in parallelism.
+Another issue with this approach is that the max size of N is 700 on my iMac due to the max user processes soft limit i.e., ulimit -a shows (-u) 709.
+A better approach is to keep N-1 threads alive with semaphores to acknowledge when a thread can move to the next column.
+Addtitionally N should be able to be larger than 'max user processes'. 
+A solution to this problem is to operate on the first 'max user processes' rows at a time.
+Once a thread exits a new thread can be created. 
+A thread pool manager can exist to create threads as they exit for maximum performance.
+
+pthreads 2:
+
+Unfortunetly, Mac OSX does not support unnamed semaphores so we need to move to Linux to use them.
+On the Debian Virtual Machine we can use unammed semaphores to block pthreads from eliminating column values prematurely.
+We can have the jth rows pthreade unlock the jth semaphore so that j+1 --> N pthreads can eliminate the jth column of their rows.
+The 0th semaphore starts unlocked.
+Pthreads check the value of the semaphore using sem_getvalue in an endless loop. 
+Semaphores are set to 0 by default and raised to 1 when they are 'unlocked'.
+This method avoids the over-creation of pthreads while maintaining correctness.
+
+Empirical data shows
+    N                1         10        50        100         500       700
+avg_time_pthreads 2  
+avg_time_pthreads 1  0.017 ms  2.1 ms    39 ms     153 ms      4100 ms   8650 ms
+avg_time_seq         0.017 ms  0.067 ms  0.95 ms   5.2 ms      192 ms    470 ms
+
