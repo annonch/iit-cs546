@@ -3,12 +3,12 @@
  * Homework 2
  * Shared Memory Programming
  *
- * This Program implements 3 algorithms for solving 
- * dense linear equations of the 
- * form A*x=b, where A is an n*n matrix and b is a 
- * vector. This program performs guassian elimination 
+ * This Program implements 3 algorithms for solving
+ * dense linear equations of the
+ * form A*x=b, where A is an n*n matrix and b is a
+ * vector. This program performs guassian elimination
  * without pivoting and back substitution.
- * 
+ *
  * The 3 algorithms are sequential, parallel - Pthreads
  * and parallel - OpenMP
  *
@@ -21,11 +21,11 @@
  * ALGORITHM EXPLAINATIONS:
  *
  * Sequential:
- *   This algorithm is simple and consists of 3 for loops 
+ *   This algorithm is simple and consists of 3 for loops
  *   bounded by N.
- * 
+ *
  * Pthreads:
- *   This algorithm is explained in the comments above the 
+ *   This algorithm is explained in the comments above the
  *   implementation function and in the PDF.
  *
  *
@@ -33,11 +33,11 @@
  *
  *
  *
- * 
+ *
  * * Start Wolfram Mathworld Quote
  * * http://mathworld.wolfram.com/GaussianElimination.html
- *  
- * Guassian elimination is a method for solving matrix 
+ *
+ * Guassian elimination is a method for solving matrix
  * equations of the form: Ax=b
  *
  * To perform Guassian elimination starting with the system
@@ -46,24 +46,24 @@
  * |                 ||    |     |    |
  * | a11 a12 ... a1k || x1 |     | b1 |
  * | a21 a22 ... a2k || x2 |  =  | b2 |
- * | ............... || .. |     | .. | 
+ * | ............... || .. |     | .. |
  * | ak1 ak2 ... akk || xk |     | bk |
  * |__             __||_  _|     |_  _|
- * 
+ *
  * compose the "augmented matrix equation"
- *  __                  __  _  _ 
+ *  __                  __  _  _
  * |                      ||    |
  * | a11 a12 ... a1k | b1 || x1 |
  * | a21 a22 ... a2k | b2 || x2 |
  * | ............... | .. || .. |
  * | ak1 ak2 ... akk | bk || xk |
  * |__                  __||_  _|
- * 
+ *
  * Here, the column vector in the variables 'x' is carried
  * along for labeling the matrix rows. Now, perform elementary
- * row operations to put the augmented matrix into the upper 
+ * row operations to put the augmented matrix into the upper
  * triangular form
- *  __                      __ 
+ *  __                      __
  * |                          |
  * | a'11 a'12 ... a1'k | b'1 |
  * |  0   a'22 ... a2'k | b'2 |
@@ -74,22 +74,22 @@
  * Solve the equation of the kth row for xk, then substitute
  * back into the equation of the (k-1)st row to obtain a
  * solution for x(k-1), etc., according to the formula:
- * 
+ *
  * xi = 1/a'ii( b'i - {\sum ^k _ (j=i+1)} a'ij*xj)
  *
  * * End Wolfram Mathworld Quote
  * * http://mathworld.wolfram.com/GaussianElimination.html
  *
- * 
+ *
  *
  * Exit Codes:
  *  0 - Program executed successfully
- * -1 - Incorrect arguments to program (see Usage) 
+ * -1 - Incorrect arguments to program (see Usage)
  * -2 - failed on pthreads
  * -3 - failed on semaphores
  * -4 - failed on openMP
- * 
- * Usage: 
+ *
+ * Usage:
  *  ./guass (0/1/2/3) (N)
  *   0 - Sequential mode
  *   1 - Pthreads mode
@@ -144,7 +144,7 @@ void setup(int argc, char **argv) {
     printf("Min size of array: 1 x 1\n");
     N = 1;
   }
-  
+
   /* create data */
   srand(time(NULL));
   for(i=0; i<N; i++) {
@@ -194,7 +194,7 @@ void print_result() {
   printf("\n\tResult: X = \n");
   printf(" _          _ \n");
   printf("|            |\n");
-  
+
   for(i=0; i<N; i++) {
     printf("| %10.2f |\n", X[i]);
   }
@@ -248,10 +248,10 @@ float set_exec_time(int end) {
   struct timeval time_diff;
   if (end) {
     gettimeofday(&time_end, NULL);
-    if (timeval_subtract(&time_diff, time_end, time_start) == 0) {
+    if (timeval_sub(&time_diff, time_end, time_start) == 0) {
       if (end == 1)
 	//printf("\nexec time: %1.2fs\n", time_diff.tv_sec + (time_diff.tv_usec / 1000000.0f));
-	return time_diff.tv_sec + (time_diff.tv_usec / 1000000.0f)
+	return time_diff.tv_sec + (time_diff.tv_usec / 1000000.0f);
       else if (end == 2)
 	printf("%1.2fs",
 	       time_diff.tv_sec + (time_diff.tv_usec / 1000000.0f));
@@ -276,7 +276,7 @@ clock_t getTime() {
 }
 
 float diffTime(clock_t t1, clock_t t2) {
-  return ((float)(t2 - t1) / (float)CLOCKS_PER_SEC ) * 1000;   
+  return ((float)(t2 - t1) / (float)CLOCKS_PER_SEC ) * 1000;
 }
 
 /* Wrapper Functions */
@@ -308,7 +308,7 @@ void parallel_openMP() {
 void guass_seq() {
   int norm, row, col;
   float multiplier;
-  
+
   /* Guassian Elimination */
   for (norm = 0; norm < N - 1; norm++) {
     for (row = norm + 1; row < N; row++) {
@@ -326,11 +326,11 @@ void guass_pthreads2() {
   int i,j;
   pthread_t threads[N];
   int rc;  //return code from pthread_create and sem_init
-  
-  /*Instead of using N-1 rounds, we embed the 'rounds' 
+
+  /*Instead of using N-1 rounds, we embed the 'rounds'
    * into the pthreads routine. We use N-1 semaphores to protect
    * the columns that havent been reduced yet. we start with
-   * all sems are 'locked' and then the sem_k is 'unlocked' by 
+   * all sems are 'locked' and then the sem_k is 'unlocked' by
    * pthread_k before it exits. */
 
   /* init and lock semaphores*/
@@ -342,7 +342,7 @@ void guass_pthreads2() {
       printf("ERROR!!!!; sem_init failed with %d.\n",rc);
       exit(-3);
     }
-    
+
   }
   for(j=1;j<N+1;j++) { //O(N^2/p)
     /* kickoff N-i-1 threads */
@@ -354,7 +354,7 @@ void guass_pthreads2() {
       printf("Error!!!!!; pthread_create failed with %d\n", rc);
       exit(-2);
     }
-    
+
   }
   sem_post(&Locks[0]);
   for(j=1;j<N+1;j++) {
@@ -371,9 +371,9 @@ void *poutine2 (void *pthreadarg) {
   loc_data = (struct pthread_data *) pthreadarg;
   i = loc_data->i;
   j = loc_data->j;  //myrow
-  
+
   /* start at i and Use the i_th row to eliminate the i_th column
-   * of the j_th row */ 
+   * of the j_th row */
   for(i;i<j;i++){
     //see if sem is unlocked
     isLocked=0;
@@ -390,7 +390,7 @@ void *poutine2 (void *pthreadarg) {
   sem_post(&Locks[j]);
   /* can call pthread_exit here or else is implied */
   pthread_exit(NULL);
-  
+
 }
 
 void guass_pthreads() {
@@ -398,20 +398,20 @@ void guass_pthreads() {
   int i, j;
   pthread_t threads[N];
   int rc; //return code from pthread_create
-  /* 
-   * we can have N-1 rounds where in each round 
+  /*
+   * we can have N-1 rounds where in each round
    * a column is eliminated, each row is ran
    * in parallel in a manager/worker paradigm
    *
    * x x x x x      x x x x x     x x x x x     x x x x x     x x x x x
    * x x x x x      o x x x x     o x x x x     o x x x x     o x x x x
-   * x x x x x -->  o x x x x --> o o x x x --> o o x x x --> o o x x x 
+   * x x x x x -->  o x x x x --> o o x x x --> o o x x x --> o o x x x
    * x x x x x      o x x x x     o o x x x     o o o x x     o o o x x
    * x x x x x      o x x x x     o o x x x     o o o x x     o o o o x
    *     0              1             2             3             4
    */
   for(i=0; i<N-1; i++) { //O(N)
-    /* Rounds: 
+    /* Rounds:
      * use the i_th row to to remove the i_th
      * column of the j_th row
      */
@@ -419,7 +419,7 @@ void guass_pthreads() {
       /* kickoff N-i-1 threads */
       pthread_data_array[j].i=i;
       pthread_data_array[j].j=j;
-      
+
       rc = pthread_create(&threads[j], NULL, poutine, (void *) &pthread_data_array[j]);
       if (rc){
 	printf("Error!!!!!; pthread_create failed with %d\n", rc);
@@ -441,9 +441,9 @@ void *poutine (void *pthreadarg) {
   struct pthread_data *loc_data;
   loc_data = (struct pthread_data *) pthreadarg;
   i = loc_data->i;
-  j = loc_data->j; 
+  j = loc_data->j;
   /* Use the i_th row to eliminate the i_th column
-   * of the j_th row */ 
+   * of the j_th row */
 
   /* modify A */
   mult = A[j][i]/A[i][i];
@@ -472,8 +472,9 @@ void back_sub() {
   }
 }
 
-int main(int argc, char **argv) { 
-  clock_t startTime,endTime;
+int main(int argc, char **argv) {
+  float totalTime;
+  //clock_t startTime,endTime;
   /* Main routine */
   printf("\n\n\n---------------------------------------------------------------------------------------------------------------\n");
   printf("cs 546 HW 2 Shared Memory Programming.\n");
@@ -482,11 +483,13 @@ int main(int argc, char **argv) {
   printf("\tGenerated data: [A|b] =\n");
   print_data();
   printf("\tStarting Timer\n");
-  startTime=getTime();
+  //startTime=getTime();
+  start_exec_timer();
   printf("\nStep 2: running...\n");
   run(argv);
-  endTime=getTime();
-  printf("\nTotal Time Spent: %15.6f ms\n", diffTime(startTime,endTime));
+  //endTime=getTime();
+  totalTime = print_exec_timer();
+  printf("\nTotal Time Spent: %15.6f s\n", totalTime);//diffTime(startTime,endTime));
   printf("\n---------------------------------------------------------------------------------------------------------------\n");
   /* exit program */
   return 0;
