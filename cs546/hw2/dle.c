@@ -26,7 +26,7 @@
  * 
  * Pthreads:
  *   This algorithm is explained in the comments above the 
- *   implementation function. Basically
+ *   implementation function and in the PDF.
  *
  *
  * OpenMP:
