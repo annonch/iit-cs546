@@ -3,7 +3,7 @@
 #+EMAIL: channon@iit.edu 
 
 # How to install:
-gcc -pthread -o dle ./dle.c
+gcc -pthread -fopenmp -o dle ./dle.c
 
 # Usage:
 ./dle mode size_of_N
@@ -32,7 +32,7 @@ The running time is O(N^3/p).
    *     0              1             2             3             4                            
    */
 
-Empirical data shows 
+Empirical data shows on Darwin ccs-s03.lanl.gov 15.6.0 Darwin Kernel Version 15.6.0: Sun Jun  4 21:43:07 PDT 2017; root:xnu-3248.70.3~1/RELEASE_X86_64 x86_64
     N              1         10        50        100         500       700
 avg_time_pthreads  0.017 ms  2.1 ms    39 ms     153 ms      4100 ms   8650 ms
 avg_time_seq       0.017 ms  0.067 ms  0.95 ms   5.2 ms      192 ms    470 ms
@@ -51,16 +51,41 @@ A thread pool manager can exist to create threads as they exit for maximum perfo
 pthreads 2:
 
 Unfortunetly, Mac OSX does not support unnamed semaphores so we need to move to Linux to use them.
-On the Debian Virtual Machine we can use unammed semaphores to block pthreads from eliminating column values prematurely.
+On the Debian Machine 
+Linux falcon 3.16.0-4-amd64 #1 SMP Debian 3.16.39-1+deb8u1 (2017-02-22) x86_64 GNU/Linux
+we can use unammed semaphores to block pthreads from eliminating column values prematurely.
 We can have the jth rows pthreade unlock the jth semaphore so that j+1 --> N pthreads can eliminate the jth column of their rows.
 The 0th semaphore starts unlocked.
 Pthreads check the value of the semaphore using sem_getvalue in an endless loop. 
 Semaphores are set to 0 by default and raised to 1 when they are 'unlocked'.
 This method avoids the over-creation of pthreads while maintaining correctness.
 
-Empirical data shows
-    N                1         10        50        100         500       700
-avg_time_pthreads 2  0.017 ms  140 ms    3400 ms  
-avg_time_pthreads 1  0.017 ms  2.1 ms    39 ms     153 ms      4100 ms   8650 ms
-avg_time_seq         0.017 ms  0.067 ms  0.95 ms   5.2 ms      192 ms    470 ms
+Empirical data shows on Linux falcon 3.16.0-4-amd64 #1 SMP Debian 3.16.39-1+deb8u1 (2017-02-22) x86_64 GNU/Linux
+    N                1         10        50        100       500       700
+avg_time_pthreads 2  0.0002 s  0.035 s   0.87 s    3.31 s    50.2 s    94.8 s        
+avg_time_pthreads 1  0.017 ms  2.1 ms    39 ms     153 ms    4100 ms   8650 ms
+avg_time_seq         0.0002 s  0.0006 s  0.0038 s  0.0135 s  0.48 s    1.19 s
+
+Surprisingly to me, our data shows that this method performs worse than the pthreads 1.
+This may be due to the scheduling of the threads. 
+Threads with lower IDs should have higher priority but this is not the case.
+Moving forward, maybe we should restrict the number of threads created to the number of cores of the machine we are using.
+
+OpenMP:
+
+
+
+
+references: 
+https://computing.llnl.gov/tutorials/pthreads/
+http://pubs.opengroup.org/onlinepubs/7908799/xsh/semaphore.h.html
+https://stackoverflow.com/questions/459691/best-timing-method-in-c
+http://mathworld.wolfram.com/GaussianElimination.html
+https://github.com/gmendonca/gaussian-elimination-pthreads-openmp
+http://www.math-cs.gordon.edu/courses/ma342/handouts/gauss.pdf
+http://ehneilsen.net/notebook/orgExamples/org-examples.html
+http://homepages.math.uic.edu/~jan/mcs572/parallelLU.pdf
+https://computing.llnl.gov/tutorials/openMP/
+
+
 

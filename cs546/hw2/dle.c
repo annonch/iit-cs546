@@ -105,6 +105,7 @@
 #include <stdio.h>
 #include <pthread.h>
 #include <semaphore.h>
+#include <omp.h>
 #include "dle.h"
 
 /* arbitrarily choose max n of 1000 */
@@ -204,6 +205,9 @@ void print_result() {
 void print_data() {
   /* print data beautifully */
   int i,j;
+  if (N > 20) {
+    return;
+  }
   /* print top */
   printf(" __");
   for (i=0; i< N; i++) {
@@ -456,7 +460,27 @@ void *poutine (void *pthreadarg) {
 }
 
 void guass_openMP() {
-
+  /* The OpenMP implementation is similar to the pthreads 1 implemenation */
+  int i,j,col;
+  float mult;
+  
+  for(i=0; i<N-1; i++) { //O(N)
+    
+#pragma omp parallel num_threads(4)  default(shared) private(j,col,mult)
+    /* Rounds:
+     * use the i_th row to to remove the i_th
+     * column of the j_th row
+     */
+    for(j=i+1;j<N+1;j++) { //O(N^2/p) 
+      /* modify A */
+      mult = A[j][i]/A[i][i];
+      for(col=i;col<N+1;col++) {
+	A[j][col] -= mult * A[i][col];
+      }
+      B[j]-= B[i] * mult;
+    }
+#pragma omp barrier
+  }
 }
 
 void back_sub() {
