@@ -1,91 +1,121 @@
 #+TITLE: cs546 hw2 Shared Memory Programming
 #+AUTHOR: Christopher Hannon
 #+EMAIL: channon@iit.edu 
+#+OPTIONS: H:2 num:nil toc:nil \n:nil @:t ::t |:t ^:{} _:{} *:t TeX:t LaTeX:t
+#+STARTUP: showall
+#+LANGUAGE:  en
+#+EXPORT_SELECT_TAGS: export
+#+EXPORT_EXCLUDE_TAGS: noexport
+#+INFOJS_OPT: view:showall toc:t ltoc:t mouse:underline path:http://orgmode.org/org-info.js
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="../css/notebook.css" />
 
-# How to install:
+* How to install
 gcc -pthread -fopenmp -o dle ./dle.c
 
-# Usage:
-./dle mode size_of_N
-Where mode = 0-3
-0 - sequential
-1 - pthreads
-2 - openmp
-3 - Test all (not implemented)
-and N = [1-1000] the size of the matrix A
+* Usage
+ ./dle mode size_of_N
+- Where mode = 0-3
+- 0 - sequential
+- 1 - pthreads
+- 2 - openmp
+- 3 - Test all (not implemented)
+- and N = [1-1000] the size of the matrix A
 
-Algorithms:
+* Algorithms
+Additional information on how the algorithms work can be found in the comments in the source file.
 
-pthreads 1:
+** Sequential
+The sequential implementation is done using only one thread with no parallelism as a baseline to compare the parallel implemenations with.
+
+** Pthreads 1
 
 In the first implementation of pthreads algorithm there are N-1 rounds.
-In each round N-1-#elapsed_rounds pthreads are created. 
-Each pthread eliminates one column of one row.
-After completion, the main thread waits for each pthread to return. 
-The running time is O(N^3/p).
-  /*                                                                                           
-   * x x x x x      x x x x x     x x x x x     x x x x x     x x x x x                        
-   * x x x x x      o x x x x     o x x x x     o x x x x     o x x x x                        
-   * x x x x x -->  o x x x x --> o o x x x --> o o x x x --> o o x x x                        
-   * x x x x x      o x x x x     o o x x x     o o o x x     o o o x x                        
-   * x x x x x      o x x x x     o o x x x     o o o x x     o o o o x                        
-   *     0              1             2             3             4                            
-   */
-
-Empirical data shows on Darwin ccs-s03.lanl.gov 15.6.0 Darwin Kernel Version 15.6.0: Sun Jun  4 21:43:07 PDT 2017; root:xnu-3248.70.3~1/RELEASE_X86_64 x86_64
-    N              1         10        50        100         500       700
-avg_time_pthreads  0.017 ms  2.1 ms    39 ms     153 ms      4100 ms   8650 ms
-avg_time_seq       0.017 ms  0.067 ms  0.95 ms   5.2 ms      192 ms    470 ms
+ In each round N-1-#elapsed_rounds pthreads are created. 
+ Each pthread eliminates one column of one row.
+ After completion, the main thread waits for each pthread to return. 
+ In each round one element in A is reduced to 0 in each row.
+ The running time is O(N^3/p).
+                                                                                             
+| x x x x x |     | x x x x x |     | x x x x x |     | x x x x x |     | x x x x x |
+| x x x x x |     | o x x x x |     | o x x x x |     | o x x x x |     | o x x x x |
+| x x x x x | --> | o x x x x | --> | o o x x x | --> | o o x x x | --> | o o x x x |
+| x x x x x |     | o x x x x |     | o o x x x |     | o o o x x |     | o o o x x |
+| x x x x x |     | o x x x x |     | o o x x x |     | o o o x x |     | o o o o x |
+| 0         |     | 1         |     | 2         |     | 3         |     | 4         |
+  
+Empirical data shows on Darwin ccs-s03.lanl.gov 15.6.0 Darwin Kernel Version 15.6.0
+| N                 | 1        | 10       | 50      | 100    | 500     | 700     |
+|-------------------+----------+----------+---------+--------+---------+---------|
+| avg_time_pthreads | 0.017 ms | 2.1 ms   | 39 ms   | 153 ms | 4100 ms | 8650 ms |
+| avg_time_seq      | 0.017 ms | 0.067 ms | 0.95 ms | 5.2 ms | 192 ms  | 470 ms  |
 
 
 The benefit to this approach is that since each pthread is responsible for one row there is no issues with two threads accessing the same memory.
-On the other hand the problem with this approach is that too many threads are created and destroyed.
-This overhead outweighs the gains in parallelism.
-Another issue with this approach is that the max size of N is 700 on my iMac due to the max user processes soft limit i.e., ulimit -a shows (-u) 709.
-A better approach is to keep N-1 threads alive with semaphores to acknowledge when a thread can move to the next column.
-Addtitionally N should be able to be larger than 'max user processes'. 
-A solution to this problem is to operate on the first 'max user processes' rows at a time.
-Once a thread exits a new thread can be created. 
-A thread pool manager can exist to create threads as they exit for maximum performance.
+ On the other hand the problem with this approach is that too many threads are created and destroyed.
+ This overhead outweighs the gains in parallelism.
+ Another issue with this approach is that the max size of N is 700 on my iMac due to the max user processes soft limit i.e., ulimit -a shows (-u) 709.
+ A better approach is to keep N-1 threads alive with semaphores to acknowledge when a thread can move to the next column.
+ Addtitionally N should be able to be larger than 'max user processes'. 
+ A solution to this problem is to operate on the first 'max user processes' rows at a time.
+ Once a thread exits a new thread can be created. 
+ A thread pool manager can exist to create threads as they exit for maximum performance.
 
-pthreads 2:
+** Pthreads 2
 
 Unfortunetly, Mac OSX does not support unnamed semaphores so we need to move to Linux to use them.
-On the Debian Machine 
-Linux falcon 3.16.0-4-amd64 #1 SMP Debian 3.16.39-1+deb8u1 (2017-02-22) x86_64 GNU/Linux
-we can use unammed semaphores to block pthreads from eliminating column values prematurely.
-We can have the jth rows pthreade unlock the jth semaphore so that j+1 --> N pthreads can eliminate the jth column of their rows.
-The 0th semaphore starts unlocked.
-Pthreads check the value of the semaphore using sem_getvalue in an endless loop. 
-Semaphores are set to 0 by default and raised to 1 when they are 'unlocked'.
-This method avoids the over-creation of pthreads while maintaining correctness.
+ On the Debian Machine Linux falcon 3.16.0-4-amd64 #1 SMP Debian 3.16.39-1+deb8u1 
+ we can use unammed semaphores to block pthreads from eliminating column values prematurely.
+ We can have the jth rows pthreade unlock the jth semaphore so that j+1 --> N pthreads can eliminate the jth column of their rows.
+ The 0th semaphore starts unlocked.
+ Pthreads check the value of the semaphore using sem_getvalue in an endless loop. 
+ Semaphores are set to 0 by default and raised to 1 when they are 'unlocked'.
+ This method avoids the over-creation of pthreads while maintaining correctness.
 
-Empirical data shows on Linux falcon 3.16.0-4-amd64 #1 SMP Debian 3.16.39-1+deb8u1 (2017-02-22) x86_64 GNU/Linux
-    N                1         10        50        100       500       700
-avg_time_pthreads 2  0.0002 s  0.035 s   0.87 s    3.31 s    50.2 s    94.8 s        
-avg_time_pthreads 1  0.017 ms  2.1 ms    39 ms     153 ms    4100 ms   8650 ms
-avg_time_seq         0.0002 s  0.0006 s  0.0038 s  0.0135 s  0.48 s    1.19 s
+ Empirical data shows on Linux falcon 3.16.0-4-amd64 #1 SMP Debian 3.16.39-1+deb8u1
+| N                   | 1        | 10       | 50       | 100      | 500     | 700     |
+|---------------------+----------+----------+----------+----------+---------+---------|
+| avg_time_pthreads 2 | 0.0002 s | 0.035 s  | 0.87 s   | 3.31 s   | 50.2 s  | 94.8 s  |
+| avg_time_pthreads 1 | 0.017 ms | 2.1 ms   | 39 ms    | 153 ms   | 4100 ms | 8650 ms |
+| avg_time_seq        | 0.0002 s | 0.0006 s | 0.0038 s | 0.0135 s | 0.48 s  | 1.19 s  |
 
-Surprisingly to me, our data shows that this method performs worse than the pthreads 1.
-This may be due to the scheduling of the threads. 
-Threads with lower IDs should have higher priority but this is not the case.
-Moving forward, maybe we should restrict the number of threads created to the number of cores of the machine we are using.
+ Surprisingly to me, our data shows that this method performs worse than the pthreads 1.
+ This may be due to the scheduling of the threads. 
+ Threads with lower IDs should have higher priority but this is not the case.
+ Moving forward, maybe we should restrict the number of threads created to the number of cores of the machine we are using.
 
-OpenMP:
+** OpenMP
+
+ The OpenMP algorithm computes the elimination similar to the first pthread implementation. 
+ The major difference is that the number of threads is specified by:
+ - #pragma omp parallel num_threads(8)  default(shared) private(j,col,mult)
+ Then after each round, the threads synchronize.
+ - #pragma omp barrier
+ - #pragma omp single
+ Then the threads are used in subsequent rounds again in the for loop.
+
+Empirical data shows on Linux falcon 3.16.0-4-amd64 #1 SMP Debian 3.16.39-1+deb8u1 
+| N                   | 1        | 10       | 50       | 100      | 500     | 700     | 1000   |
+|---------------------+----------+----------+----------+----------+---------+---------+--------|
+| avg_time_openMP     | 0.0002 s | 0.031 s  | 0.142 s  | 0.299 s  | 2.13 s  | 4.1 s   | 7.8 s  |
+| avg_time_pthreads 2 | 0.0002 s | 0.035 s  | 0.87 s   | 3.31 s   | 50.2 s  | 94.8 s  | x      |
+| avg_time_pthreads 1 | 0.017 ms | 2.1 ms   | 39 ms    | 153 ms   | 4100 ms | 8650 ms | x      |
+| avg_time_seq        | 0.0002 s | 0.0006 s | 0.0038 s | 0.0135 s | 0.48 s  | 1.19 s  | 2.05 s |
+
+I think that because the openMP implementation uses only 8 threads its performance is better than the pthreads implemenations.
+To make the pthreads implementations better we can restrict the number of threads created.
 
 
-
-
-references: 
-https://computing.llnl.gov/tutorials/pthreads/
-http://pubs.opengroup.org/onlinepubs/7908799/xsh/semaphore.h.html
-https://stackoverflow.com/questions/459691/best-timing-method-in-c
-http://mathworld.wolfram.com/GaussianElimination.html
-https://github.com/gmendonca/gaussian-elimination-pthreads-openmp
-http://www.math-cs.gordon.edu/courses/ma342/handouts/gauss.pdf
-http://ehneilsen.net/notebook/orgExamples/org-examples.html
-http://homepages.math.uic.edu/~jan/mcs572/parallelLU.pdf
-https://computing.llnl.gov/tutorials/openMP/
+* References: 
+- https://computing.llnl.gov/tutorials/pthreads/
+- http://pubs.opengroup.org/onlinepubs/7908799/xsh/semaphore.h.html
+- https://stackoverflow.com/questions/459691/best-timing-method-in-c
+- http://mathworld.wolfram.com/GaussianElimination.html
+- https://github.com/gmendonca/gaussian-elimination-pthreads-openmp
+- http://www.math-cs.gordon.edu/courses/ma342/handouts/gauss.pdf
+- http://ehneilsen.net/notebook/orgExamples/org-examples.html
+- http://homepages.math.uic.edu/~jan/mcs572/parallelLU.pdf
+- https://computing.llnl.gov/tutorials/openMP/
+- https://computing.llnl.gov/tutorials/openMP/samples/C
 
 
 
