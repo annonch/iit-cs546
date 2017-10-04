@@ -466,7 +466,7 @@ void guass_openMP() {
   
   for(i=0; i<N-1; i++) { //O(N)
     
-#pragma omp parallel num_threads(8)  default(shared) private(j,col,mult)
+    #pragma omp parallel num_threads(8)  default(shared) private(j,col,mult)
     /* Rounds:
      * use the i_th row to to remove the i_th
      * column of the j_th row
@@ -479,8 +479,9 @@ void guass_openMP() {
       }
       B[j]-= B[i] * mult;
     }
-#pragma omp barrier
-#pragma omp single
+    #pragma omp barrier
+    #pragma omp single
+    printf("Round %d finished.\n",i);
   }
 }
 
