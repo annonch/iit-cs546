@@ -28,10 +28,9 @@
  *   This algorithm is explained in the comments above the
  *   implementation function and in the PDF.
  *
- *
  * OpenMP:
- *
- *
+ *   This algorithm is explained in the comments above the
+ *   implementation function and in the PDF.
  *
  *
  * * Start Wolfram Mathworld Quote
@@ -113,6 +112,8 @@
 /* arbitrarily choose max size */
 #define MAX_SIZE_ELEMENT 10000
 
+/* Global data */
+
 float A[MAX_SIZE_OF_N][MAX_SIZE_OF_N];
 float B[MAX_SIZE_OF_N];
 float X[MAX_SIZE_OF_N];
@@ -128,6 +129,8 @@ struct pthread_data {
 };
 
 struct pthread_data pthread_data_array[MAX_SIZE_OF_N];
+
+/* setup functions */
 
 void setup(int argc, char **argv) {
   int i,j;
@@ -186,10 +189,11 @@ void usage() {
     printf("0 - sequential mode\n");
     printf("1 - Pthreads mode\n");
     printf("2 - OpenMP mode\n");
-    printf("3 - Test all\n");
+    printf("3 - Test all (not implemented)\n");
     printf("N - size of A array\n\n");
 }
 
+/* Display functions */
 void print_result() {
   int i;
   printf("\n\tResult: X = \n");
@@ -274,11 +278,12 @@ float print_exec_timer() {
   return set_exec_time(1);
 }
 
-
+/* old clock */
 clock_t getTime() {
   return clock();
 }
 
+/* old clock */
 float diffTime(clock_t t1, clock_t t2) {
   return ((float)(t2 - t1) / (float)CLOCKS_PER_SEC ) * 1000;
 }
@@ -308,6 +313,8 @@ void parallel_openMP() {
   back_sub();
   print_result();
 }
+
+/* Main useful code */
 
 void guass_seq() {
   int norm, row, col;
@@ -497,6 +504,8 @@ void back_sub() {
     X[row] /= A[row][row];
   }
 }
+
+/* REPL */
 
 int main(int argc, char **argv) {
   float totalTime;

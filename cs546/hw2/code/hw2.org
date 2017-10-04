@@ -10,7 +10,7 @@
 #+HTML_HEAD: <link rel="stylesheet" type="text/css" href="../css/notebook.css" />
 
 * How to install
-gcc -pthread -fopenmp -o dle ./dle.c
+cd code && gcc -pthread -fopenmp -o dle ./dle.c
 
 * Usage
  ./dle mode size_of_N
@@ -104,8 +104,17 @@ Empirical data shows on Linux falcon 3.16.0-4-amd64 #1 SMP Debian 3.16.39-1+deb8
 I think that because the openMP implementation uses only 8 threads its performance is better than the pthreads implemenations.
 To make the pthreads implementations better we can restrict the number of threads created.
 
+* Screenshots
+  #+CAPTION: Screenshot of sequential executing on OSX.
+  #+NAME:   fig:1
+  #+ATTR_HTML: :width 60% :height 60% 
+  [[../s/ScreenShot1.png]] 
+  #+CAPTION: Screenshot of OpenMP running on Debian.
+  #+NAME:   fig:2
+  #+ATTR_HTML: :width 60% :height 60% 
+  [[../s/ScreenShot2.png]]
 
-* References: 
+* References
 - https://computing.llnl.gov/tutorials/pthreads/
 - http://pubs.opengroup.org/onlinepubs/7908799/xsh/semaphore.h.html
 - https://stackoverflow.com/questions/459691/best-timing-method-in-c
