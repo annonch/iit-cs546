@@ -144,6 +144,102 @@ void run() {
  
 }
 
+
+/*
+MPI_Send(
+    void* data,
+    int count,
+    MPI_Datatype datatype,
+    int destination,
+    int tag,
+    MPI_Comm communicator)
+
+MPI_Recv(
+    void* data,
+    int count,
+    MPI_Datatype datatype,
+    int source,
+    int tag,
+    MPI_Comm communicator,
+    MPI_Status* status)
+*/
+
+int do_MPI_stuff(int val){
+  int sval;
+  int s1,s2,s3,s4;
+  int rec;
+  
+  if(P==2){
+    if(MY_ID  == 0) { // even
+      // recieve
+      MPI_Recv(&rec,1,MPI_INT,1,1,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+      sval = rec + val;
+      // return val
+      MPI_Send(&sval,1,MPI_INT,1,1,MPI_COMM_WORLD);
+      return val;
+    }
+    else{
+      //sendval
+      sval=val;
+      MPI_Send(&sval,1,MPI_INT,0,1,MPI_COMM_WORLD);
+      //recieve
+      MPI_Recv(&rec,1,MPI_INT,0,1,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+      return val+rec;
+    }
+  }
+  
+  else if(P == 4){
+    if(MY_ID  == 0) { // even
+      // recieve
+      MPI_Recv(&rec,1,MPI_INT,1,1,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+      sval = rec + val;
+      // return val
+      MPI_Send(&sval,1,MPI_INT,1,1,MPI_COMM_WORLD);
+
+      //talk to 2
+      
+      return val;
+    }
+    else if(MY_ID == 1{
+      //sendval
+      sval=val;
+      MPI_Send(&sval,1,MPI_INT,0,1,MPI_COMM_WORLD);
+      //recieve
+      MPI_Recv(&rec,1,MPI_INT,0,1,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+      return val+rec;
+    }
+    if(MY_ID == 2) { // even
+      // recieve
+      MPI_Recv(&rec,1,MPI_INT,3,1,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+      sval = rec + val;
+      // return val
+
+      MPI_Send(&sval,1,MPI_INT,0,1,MPI_COMM_WORLD);
+      MPI_Recv(&rec,1,MPI_INT,0,1,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+      sval = sval + rec
+      
+      MPI_Send(&sval,1,MPI_INT,3,1,MPI_COMM_WORLD);
+      return val;
+    }
+    else{ //3
+      //sendval
+      sval=val;
+      MPI_Send(&sval,1,MPI_INT,2,1,MPI_COMM_WORLD);
+      //recieve
+      MPI_Recv(&rec,1,MPI_INT,2,1,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+      return val+rec;
+    }
+  }
+    
+  else if(P == 8){
+    
+  }
+  else{
+    //16
+  }
+  
+}
+
 /* timing code is from stackoverflow */
 /* https://stackoverflow.com/questions/459691/best-timing-method-in-c */
 
