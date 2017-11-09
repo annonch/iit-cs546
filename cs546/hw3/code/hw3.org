@@ -1,0 +1,80 @@
+#+TITLE: cs546 hw3 MPI Programming
+#+AUTHOR: Christopher Hannon
+#+EMAIL: channon@iit.edu 
+#+OPTIONS: H:2 num:nil toc:nil \n:nil @:t ::t |:t ^:{} _:{} *:t TeX:t LaTeX:t
+#+STARTUP: showall
+#+LANGUAGE:  en
+#+EXPORT_SELECT_TAGS: export
+#+EXPORT_EXCLUDE_TAGS: noexport
+#+INFOJS_OPT: view:showall toc:t ltoc:t mouse:underline path:http://orgmode.org/org-info.js
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="../css/notebook.css" />
+
+* How to install
+TODO
+ cd code && gcc ?????
+# -pthread -fopenmp -o dle ./dle.c
+
+* Usage
+ ./psp N P
+
+* Algorithm
+Additional information on how the algorithm works can be found in the comments in the source file.
+
+** Prefix Sum Problem
+The algorithm for the prefix problem can be found in R. Ladner and M. Fischer's paper 'Parallel Prefix Computation'.
+
+Because this programming assignment is designed to test the knowledge of parallel programming and MPI, I make the following assumptions
+*** N >= 2 
+*** P = {1,2,4,8,12,16}
+*** N >= 2*P 
+*** N % P = 0
+*** N = 2^x
+
+Essentially the problem has O(n) work and depth of O(log n). Where n is the number of input values. 
+ Basically we can reduce the problem to 2 steps:
+ First, a binary tree is constructed by summing the neighboring values from the bottom up.
+ Secondly, a top down approach is used to pass values previously computed.
+
+Example 1: n=16
+|----------+----+----------+----+----------+----+----------+----+----------+----+------------+-----+------------+-----+------------+-----|
+| y0=r0+r1 |    |          |    |          |    |          |    |          |    |            |     |            |     |            |     |
+|----------+----+----------+----+----------+----+----------+----+----------+----+------------+-----+------------+-----+------------+-----|
+| r0=w0+w1 |    |          |    |          |    |          |    | r1=w2+w3 |    |            |     |            |     |            |     |
+|----------+----+----------+----+----------+----+----------+----+----------+----+------------+-----+------------+-----+------------+-----|
+| w0=z0+z1 |    |          |    | w1=z2+z3 |    |          |    | w2=z4+z5 |    |            |     | w3=z6+z7   |     |            |     |
+|----------+----+----------+----+----------+----+----------+----+----------+----+------------+-----+------------+-----+------------+-----|
+| z0=x0+x1 |    | z1=x2+x3 |    | z2=x4+x5 |    | z3=x6+x7 |    | z4=x8+x9 |    | z5=x10+x11 |     | z6=x12+x13 |     | z7=x14+x15 |     |
+|----------+----+----------+----+----------+----+----------+----+----------+----+------------+-----+------------+-----+------------+-----|
+| x0       | x1 | x2       | x3 | x4       | x5 | x6       | x7 | x8       | x9 | x10        | x11 | x12        | x13 | x14        | x15 |
+|----------+----+----------+----+----------+----+----------+----+----------+----+------------+-----+------------+-----+------------+-----|
+
+Basically, in step 2, y0 is Sn, to compute S(n-1) we pass r0 to the right side and then this process will keep occuring recusively.
+There are 2 * log(n) rounds
+
+The first step in the algorithm is to divide N by the number of processors, then compute the z's. If the number of z's is greater than 1 we can recurse without synchronizing across processors,
+When the resulting sums are 0 each MPI rank will synchonize to 
+
+* Screenshots
+  #+CAPTION: Screenshot of sequential executing on OSX.
+  #+NAME:   fig:1
+  #+ATTR_HTML: :width 60% :height 60% 
+  [[../s/ScreenShot1.png]] 
+  #+CAPTION: Screenshot of OpenMP running on Debian.
+  #+NAME:   fig:2
+  #+ATTR_HTML: :width 60% :height 60% 
+  [[../s/ScreenShot2.png]]
+
+* References
+- https://computing.llnl.gov/tutorials/pthreads/
+- http://pubs.opengroup.org/onlinepubs/7908799/xsh/semaphore.h.html
+- https://stackoverflow.com/questions/459691/best-timing-method-in-c
+- http://mathworld.wolfram.com/GaussianElimination.html
+- https://github.com/gmendonca/gaussian-elimination-pthreads-openmp
+- http://www.math-cs.gordon.edu/courses/ma342/handouts/gauss.pdf
+- http://ehneilsen.net/notebook/orgExamples/org-examples.html
+- http://homepages.math.uic.edu/~jan/mcs572/parallelLU.pdf
+- https://computing.llnl.gov/tutorials/openMP/
+- https://computing.llnl.gov/tutorials/openMP/samples/C
+
+
+
