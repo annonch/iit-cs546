@@ -3,7 +3,7 @@
 
 #include <GL/glut.h>
 
-#include <cutil_inline.h>
+//#include <cutil_inline.h>
 #include <cuda.h>
 
 int* H_a;
@@ -164,7 +164,7 @@ void CUDA_NextGeneration()
 	cudaMemcpy(D_a, H_a, SCREENX*SCREENY*sizeof(int), cudaMemcpyHostToDevice);
 
 	NextGen<<<dim3(gridx,gridy), dim3(blockx,blocky)>>>(D_a, D_b);
-
+	printf("chil\n\n");
 	cudaMemcpy(H_a, D_b, SCREENX*SCREENY*sizeof(int), cudaMemcpyDeviceToHost);
 }
 
@@ -174,7 +174,7 @@ int g_Index = 0;
 unsigned int frameCount = 0;
 unsigned int timer = 0;
 
-
+/*
 void computeFPS()
 {
     frameCount++;
@@ -189,18 +189,18 @@ void computeFPS()
         fpsCount = 0; 
         //if (g_CheckRender && !g_CheckRender->IsQAReadback()) fpsLimit = (int)MAX(ifps, 1.f);
 
-        cutilCheckError(cutResetTimer(timer));  
+        //cutilCheckError(cutResetTimer(timer));  
 
         //AutoQATest();
     }
  }
-
+*/
 
 void display()
 {
 	int x, y, a;    
 
-	cutilCheckError(cutStartTimer(timer));  
+	//cutilCheckError(cutStartTimer(timer));  
 
 	glMatrixMode(GL_PROJECTION);	/* specifies the current matrix */
 	glLoadIdentity();			/* Sets the currant matrix to identity */
@@ -240,15 +240,18 @@ void display()
 	if (!g_pause || g_singleStep)
 	{
 		if (g_gpu)
+		{
+			printf("HIIIIIIII\n");
 			CUDA_NextGeneration();
+			}	
 		else
 			NextGeneration();
 
 		g_singleStep = false;
 	}
 	//glutReportErrors ();
-	cutilCheckError(cutStopTimer(timer)); 
-	computeFPS();
+	//cutilCheckError(cutStopTimer(timer)); 
+	//computeFPS();
 }
 
 void keyboard(unsigned char key, int x, int y)
@@ -294,7 +297,7 @@ int main(int argc, char **argv)
 	cudaDeviceProp deviceProp;
 	char *device = NULL;
 
-	if(cutGetCmdLineArgumentstr(argc, (const char**)argv, "device", &device))
+	if(0)//cutGetCmdLineArgumentstr(argc, (const char**)argv, "device", &device))
 	{
 		cudaGetDeviceCount(&deviceCount);
 		idev = atoi(device);
@@ -310,10 +313,10 @@ int main(int argc, char **argv)
 		idev = 0;
 	}
 
-	cutilSafeCall(cudaSetDevice(idev));
+	//cutilSafeCall(cudaSetDevice(idev));
 	cudaGetDeviceProperties(&deviceProp, idev);
 
-	cutilCheckError( cutCreateTimer( &timer));
+	//	cutilCheckError( cutCreateTimer( &timer));
 
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_ALPHA | GLUT_DEPTH);
@@ -333,7 +336,7 @@ int main(int argc, char **argv)
 
 	glutMainLoop();
 
-	cutilCheckError( cutDeleteTimer( timer));
+	//	cutilCheckError( cutDeleteTimer( timer));
 }
 
 
