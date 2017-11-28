@@ -1,1 +1,8 @@
 bash ./setup.sh
+
+compiles the code on comet and submits the g1 and g2 batch files for sequential and cuda modes.
+
+org file is source for report
+
+results directory stores the printouts from various size runs (N=1000, N=10000, N=50000)
+

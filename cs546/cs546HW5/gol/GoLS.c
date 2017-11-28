@@ -22,8 +22,6 @@
 
 int* H_a; // for serial (frame a)
 int* H_b; // for serial (frame b)  esssentially a temparary buffer for the updates from the previous interatiomn/cycle/generation
-int* D_a;
-int* D_b;
 
 
 // define the size of the world 
@@ -181,8 +179,6 @@ void start_exec_timer() {
 float print_exec_timer() {
   return set_exec_time(1);
 }
-
-
 
 
 int main(int argc, char **argv)

@@ -1,4 +1,4 @@
-#+TITLE: cs546 hw2 Shared Memory Programming
+#+TITLE: cs546 hw5 CUDA Programming on Comet
 #+AUTHOR: Christopher Hannon
 #+EMAIL: channon@iit.edu 
 #+OPTIONS: H:2 num:nil toc:nil \n:nil @:t ::t |:t ^:{} _:{} *:t TeX:t LaTeX:t
@@ -10,44 +10,37 @@
 #+HTML_HEAD: <link rel="stylesheet" type="text/css" href="../css/notebook.css" />
 
 * How to install
-cd code && gcc -pthread -fopenmp -o dle ./dle.c
+./setup.sh 
+
+The setup file compiles, and queues the sequential and cuda versions.
 
 * Usage
- ./dle mode size_of_N
-- Where mode = 0-3
-- 0 - sequential
-- 1 - pthreads
-- 2 - openmp
-- 3 - Test all (not implemented)
-- and N = [1-1000] the size of the matrix A
+Change the Size of N by modifying SCREENX and SCREENY in the defines of GoLS.c and GoLCuda.cu
 
 * Algorithms
-Additional information on how the algorithms work can be found in the comments in the source file.
-
-** Sequential
-The sequential implementation is done using only one thread with no parallelism as a baseline to compare the parallel implemenations with.
-
-** Pthreads 1
+The algorithm is actually quite simple, we initialize a random array of NxM integer values. 
+ The 2D world is stored in a 1D Array of size (sizeof(integer)*N*M). The next step is to iterated through the world and update the values.
+ The new values should not overwrite the origional array until the whole world is traversed. 
+ The parallel version splits the world into blocks and uses data parallelism to speed up.
 
 
-Empirical data shows on Linux falcon 3.16.0-4-amd64 #1 SMP Debian 3.16.39-1+deb8u1 | N                   | 1        | 10       | 50       | 100      | 500     | 700     | 1000   |
-|---------------------+----------+----------+----------+----------+---------+---------+--------|
-| avg_time_openMP     | 0.0002 s | 0.031 s  | 0.142 s  | 0.299 s  | 2.13 s  | 4.1 s   | 7.8 s  |
-| avg_time_pthreads 2 | 0.0002 s | 0.035 s  | 0.87 s   | 3.31 s   | 50.2 s  | 94.8 s  | x      |
-| avg_time_pthreads 1 | 0.017 ms | 2.1 ms   | 39 ms    | 153 ms   | 4100 ms | 8650 ms | x      |
-| avg_time_seq        | 0.0002 s | 0.0006 s | 0.0038 s | 0.0135 s | 0.48 s  | 1.19 s  | 2.05 s |
+Empirical data from Comet on XSEDE using sequential and CUDA 7.0 shows Execution time of:
+| N              | 100     | 1000    | 10000   | 25000 |
+|----------------+---------+---------+---------+-------|
+| Serial Version | 0.539 s | 60.46 s | --- s   | --- s |
+| Cuda Version   | 0.036 s | 0.986 s | 73.86 s | --- s |
 
-I think that because the openMP implementation uses only 8 threads its performance is better than the pthreads implemenations.
-To make the pthreads implementations better we can restrict the number of threads created.
+
+Empirical data from Comet on XSEDE using sequential and CUDA 7.0 shows Execution time per frame of:
+| N              | 100       | 1000     | 10000    | 25000  |
+|----------------+-----------+----------+----------+-------|
+| Serial Version | 0.00061 s | 0.068 s  | --- s    | --- s |
+| Cuda Version   | 0.00004 s | 0.0012 s | 0.0845 s | --- s |
+
+Here we can see that the serial version is capped at 1000 due to execution time (greater than 1 hour) and the Cuda version vastly outperforms the serial version.
+
 * Screenshots
-  #+CAPTION: Screenshot of sequential executing on OSX.
-  #+NAME:   fig:1
-  #+ATTR_HTML: :width 60% :height 60% 
-  [[../s/ScreenShot1.png]] 
-  #+CAPTION: Screenshot of OpenMP running on Debian.
-  #+NAME:   fig:2
-  #+ATTR_HTML: :width 60% :height 60% 
-  [[../s/ScreenShot2.png]]
+  Screen shots can be found in ./results/* where the directory names are the sizes of N.
 
 * Reference
   -  https://stackoverflow.com/questions/459691/best-timing-method-in-c

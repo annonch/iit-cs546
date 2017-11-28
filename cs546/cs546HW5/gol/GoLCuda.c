@@ -14,13 +14,8 @@
 
 
 
-//#include <GL/glut.h>
-
-//#include <helper_cuda.h>
-//#include <cutil_inline.h>
 #include <cuda.h>
 
-//#include <cuda_runtime.h>
 
 int* H_a;
 int* H_b;
@@ -50,7 +45,7 @@ void SetIndividual(int x, int y, int val, int* Array) {
         Array[x+(SCREENX*y)]=val;
 }
 
-
+/* cuda version of the code from https://devtalk.nvidia.com/default/topic/453819/cuda-programming-and-performance/the-game-of-life-in-cuda/2 */
 __device__ int Dev_GetIndividual(int x,int y,int* Array)
 {
   return (Array[x+(SCREENX*y)]);
@@ -80,7 +75,7 @@ __device__ int Dev_Neighbors(int x, int y, int* Array)
 __global__ void NextGen(int* D_a, int* D_b)
 {
   int a, n;
-  
+  //calc indexs
   int y = blockDim.y * blockIdx.y + threadIdx.y;
   int x = blockDim.x * blockIdx.x + threadIdx.x;
   
@@ -106,7 +101,6 @@ __global__ void NextGen(int* D_a, int* D_b)
 	}
       
     }
-  
 }
 
 void CUDA_NextGeneration()
@@ -120,16 +114,17 @@ void CUDA_NextGeneration()
   //int blocksPerGrid =(numElements + threadsPerBlock - 1) / threadsPerBlock;
     
   
-  
+  //copy to GPU
   cudaMemcpy(D_a, H_a, SCREENX*SCREENY*sizeof(int), cudaMemcpyHostToDevice);
   
+  //Do in parallel
   NextGen<<<dim3(gridx,gridy), dim3(blockx,blocky)>>>(D_a, D_b);
   //NextGen<<<blocksPerGrid, threadsPerBlock>>>
+
+  //copy back
   cudaMemcpy(H_a, D_b, SCREENX*SCREENY*sizeof(int), cudaMemcpyDeviceToHost);
 }
 
-//how far to print the ascii minitor
-#define PRINTVAL 10
 
 
 void SpawnPopulation(float frequenzy, int* Array) {
@@ -148,6 +143,7 @@ void SpawnPopulation(float frequenzy, int* Array) {
       }
 }
 
+#define PRINTVAL 10
 
 void printWorld() {
   int i,j;
@@ -221,10 +217,11 @@ int main(int argc, char **argv)
   
   //char *device = NULL;
 
-  //serial run
+  //par run
 
   H_a=(int*)malloc(SCREENX*SCREENY*sizeof(int));                                                                                                        
   H_b=(int*)malloc(SCREENX*SCREENY*sizeof(int));                                                                                                        
+  // cuda malloc
   cudaMalloc( (void**)&D_a, SCREENX*SCREENY*sizeof(int));
   cudaMalloc( (void**)&D_b, SCREENX*SCREENY*sizeof(int));
 	
