@@ -5,7 +5,7 @@
 #SBATCH -p gpu         # specify queue
 #SBATCH --gres=gpu:4  
 #SBATCH --ntasks-per-node=24
-#SBATCH -t 00:25:00       # max time 5mins
+#SBATCH -t 00:15:00       # max time 5mins
 
 #SBATCH --mail-user=channon@hawk.iit.edu
 #SBATCH --mail-type=ALL

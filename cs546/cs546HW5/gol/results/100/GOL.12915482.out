@@ -1,0 +1,48 @@
+initial world (corner)
+x o o o o o x o x o 
+o x x x x o o x x o 
+o o o x o o o o o o 
+x x o o o o o x o x 
+x o o o o o o o o x 
+o x x o x o o o x o 
+x o o o o o o x x x 
+o x o o x o o o o o 
+o x x o o o o o o o 
+o x x o o x o o o x 
+starting the timer
+after 10 cycles
+o o o o o o x x o o 
+o o o x o o o o o o 
+o o o x o o o o o o 
+x o o x o o o o o x 
+o o o o o o o o o x 
+o o o o o o o o o o 
+x o o o o o x x o o 
+o o o o x x x x o o 
+x o x x o o o o x x 
+o o x x o x o o o o 
+10 cycles: 0.000529 time/cycle 0.000053
+after 100 cycles
+o o o o o o x x o o 
+o o o o o o o o o x 
+o o o o o o o o o x 
+x o o o o o o o o o 
+o o o o o o o o o o 
+o o o o o o o o o o 
+x o o o o o o o o o 
+o o o o o o o o o o 
+x o o o o o o o o o 
+o o o o o o x o o o 
+100 cycles: 0.004021 time/cycle 0.000045
+after 1000 cycles
+o o o o o o x x o o 
+o o o o o o o o o o 
+o o o o o o o o o o 
+x o o o o o o o o o 
+o o o o o o o o o o 
+o o o o o o o o o o 
+x o o o o o o o o o 
+o o o o o o o o x o 
+x o o o o o o x o x 
+o o o o o o o x o x 
+1000 cycles: 0.036302 time/cycle 0.000041
