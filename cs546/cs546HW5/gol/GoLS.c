@@ -27,8 +27,8 @@ int* D_b;
 
 
 // define the size of the world 
-#define SCREENX 1000
-#define SCREENY 1000
+#define SCREENX 10000
+#define SCREENY 10000
 
 //how far to print the ascii minitor
 #define PRINTVAL 10

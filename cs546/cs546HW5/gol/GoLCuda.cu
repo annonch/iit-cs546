@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include <time.h>
+#include <sys/time.h>
 #include <string.h>
 #include <math.h>
 
@@ -16,19 +16,19 @@
 
 //#include <GL/glut.h>
 
-#include <helper_cuda.h>
+//#include <helper_cuda.h>
 //#include <cutil_inline.h>
-//#include <cuda.h>
+#include <cuda.h>
 
-#include <cuda_runtime.h>
+//#include <cuda_runtime.h>
 
 int* H_a;
 int* H_b;
 int* D_a;
 int* D_b;
 
-#define SCREENX 1000
-#define SCREENY 1000
+#define SCREENX 10000
+#define SCREENY 10000
 
 #define XBLOCKSIZE 32;
 #define YBLOCKSIZE 32;
@@ -39,6 +39,17 @@ float POPULATION=0.3125; //Chance, that the Random Starting Population generator
 bool g_pause = false;
 bool g_singleStep = false;
 bool g_gpu = false;//true;
+
+int GetIndividual(int x, int y, int* Array) {
+  /* Get individual returns the value of an (x,y) coordinate from the equivilent 1D array mapping */
+  return (Array[x+(SCREENX*y)]);
+}
+
+void SetIndividual(int x, int y, int val, int* Array) {
+  /* Set individual sets the value of an (x,y) coordinate from the equvilent 1D array mapping */
+        Array[x+(SCREENX*y)]=val;
+}
+
 
 __device__ int Dev_GetIndividual(int x,int y,int* Array)
 {
@@ -203,12 +214,12 @@ float print_exec_timer() {
 
 int main(int argc, char **argv)
 {
-  int idev, deviceCount;
+  //int idev, deviceCount;
   int i;
   float totalTime, nextStepTime;
   totalTime=0.0;
   
-  char *device = NULL;
+  //char *device = NULL;
 
   //serial run
 
