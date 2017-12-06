@@ -1,0 +1,60 @@
+#+TITLE: cs546 Term Project: MPI Programming
+#+AUTHOR: Christopher Hannon
+#+EMAIL: channon@iit.edu 
+#+OPTIONS: H:2 num:nil toc:nil \n:nil @:t ::t |:t ^:{} _:{} *:t TeX:t LaTeX:t
+#+STARTUP: showall
+#+LANGUAGE:  en
+#+EXPORT_SELECT_TAGS: export
+#+EXPORT_EXCLUDE_TAGS: noexport
+#+INFOJS_OPT: view:showall toc:t ltoc:t mouse:underline path:http://orgmode.org/org-info.js
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="../css/notebook.css" />
+
+* How to install
+./setup.sh 
+
+The setup file compiles the project source code.
+
+* Usage
+  Usage: mpirun -np 8 ./project ALGO \n");
+  Where ALGO = 1, 2, 3, or 4
+  algo 1 is part a
+  algo 2 is part b
+  algo 3 is part c
+  algo 4 is a serial implementation (No parallelism)
+  and number of processors is 1 for algo 4, 8 for algo 3 and 2, 4, or 8 for algos 1 and 2
+
+* Algorithms
+** ALGO 1
+
+** ALGO 2
+
+** ALGO 3
+
+** ALGO 4
+
+* Results
+
+
+Empirical data from Comet on XSEDE using sequential and CUDA 7.0 shows Execution time of:
+| N              | 100     | 1000    | 10000   | 25000 |
+|----------------+---------+---------+---------+-------|
+| Serial Version | 0.539 s | 60.46 s | --- s   | --- s |
+| Cuda Version   | 0.036 s | 0.986 s | 73.86 s | --- s |
+
+
+Empirical data from Comet on XSEDE using sequential and CUDA 7.0 shows Execution time per frame of:
+| N              | 100       | 1000     | 10000    | 25000  |
+|----------------+-----------+----------+----------+-------|
+| Serial Version | 0.00061 s | 0.068 s  | --- s    | --- s |
+| Cuda Version   | 0.00004 s | 0.0012 s | 0.0845 s | --- s |
+
+
+
+
+* Screenshots
+  Screen shots can be found in ./results/* 
+
+* Reference
+  - https://stackoverflow.com/questions/459691/best-timing-method-in-c
+  - https://www.programiz.com/c-programming/examples/read-file
+
