@@ -16,9 +16,13 @@ int MODE;
 int MPI;
 
 complex A[512][512];
+complex A_i[512][512];
 complex B[512][512];
+complex B_i[512][512];
+
 complex C[512][512];
 complex D[512][512];
+complex D_i[512][512];
 
 
 int main(int argc, char **argv) 
@@ -116,7 +120,7 @@ void serial(){
 void ALGO1() {
   MPI_Status Stat;
   int i,j;
-  int start, end, range;
+  int range;
 
   range = 512/NUM_PROCS;
   
@@ -155,7 +159,7 @@ void ALGO1() {
   
   //do second part of work
   c_fft1d((complex *)&A[range*MY_ID], range, -1);
-  c_fft1d((complex *)&A[range*MY_ID], range, -1);
+  c_fft1d((complex *)&B[range*MY_ID], range, -1);
 
   //do all to all share
 
@@ -213,9 +217,8 @@ void ALGO1() {
   }
   
   //do first part of task 4
-  c_fft1d((complex *)&A[range*MY_ID], range, -1);
-  c_fft1d((complex *)&A[range*MY_ID], range, -1);
-  
+  c_fft1d((complex *)&D[range*MY_ID], range, -1);
+    
   if (MY_ID ==0){
     // master proc //
     // recv work
@@ -242,9 +245,8 @@ void ALGO1() {
 
   
   // do second part of task 4
-  c_fft1d((complex *)&A[range*MY_ID], range, -1);
-  c_fft1d((complex *)&A[range*MY_ID], range, -1);
-
+  c_fft1d((complex *)&D[range*MY_ID], range, -1);
+  
   if(MY_ID==0){
     for(i=1;i<NUM_PROCS;i++){
       MPI_Recv(&D[i*range], range*512, MPI_C_COMPLEX, i, 0, MPI_COMM_WORLD, &Stat); 
@@ -257,8 +259,72 @@ void ALGO1() {
   MPI_Barrier(MPI_COMM_WORLD);
 }
 
-void ALGO2() {
 
+/*
+MPI_Allgather(
+    void* send_data,
+    int send_count,
+    MPI_Datatype send_datatype,
+    void* recv_data,
+    int recv_count,
+    MPI_Datatype recv_datatype,
+    MPI_Comm communicator)
+
+ */
+
+void ALGO2() {
+  MPI_Status Stat;
+  int i,j;
+  int range;
+  
+
+  // do T1 and T2 part A
+  c_fft1d((complex *)&A[range*MY_ID], range, -1);
+  c_fft1d((complex *)&B[range*MY_ID], range, -1);
+ 
+  // all to all gather
+  MPI_Allgather(&A[MY_ID*range], range*512, MPI_C_COMPLEX, &A_i[0], (range)*512, MPI_C_COMPLEX, MPI_COMM_WORLD);
+  MPI_Allgather(&B[MY_ID*range], range*512, MPI_C_COMPLEX, &B_i[0], (range)*512, MPI_C_COMPLEX, MPI_COMM_WORLD);
+
+  //printf("hello\n");
+  
+  //all transpose
+  transpose(A_i);
+  transpose(B_i);
+  
+  //do T1 and T2 part B
+  c_fft1d((complex *)&A_i[range*MY_ID], range, -1);
+  c_fft1d((complex *)&B_i[range*MY_ID], range, -1);
+  
+  // all to all gather
+  MPI_Allgather(&A_i[MY_ID*range], range*512, MPI_C_COMPLEX, &A[0], (range)*512, MPI_C_COMPLEX, MPI_COMM_WORLD);
+  MPI_Allgather(&B_i[MY_ID*range], range*512, MPI_C_COMPLEX, &B[0], (range)*512, MPI_C_COMPLEX, MPI_COMM_WORLD);
+
+  //do T3
+  for(i=0;i<512;i++) {
+    for(j=MY_ID*range;j<MY_ID*range+range;j++){
+      D_i[i][j].r=A[i][j].r*B[i][j].r;
+      D_i[i][j].i=A[i][j].i*B[i][j].i;
+    }
+  }
+
+  //all to all gather
+  MPI_Allgather(&D_i[MY_ID*range], range*512, MPI_C_COMPLEX, &D[0], (range)*512, MPI_C_COMPLEX, MPI_COMM_WORLD);
+  
+  //do T4 part A
+  c_fft1d((complex *)&D[range*MY_ID], range, -1);
+  
+  // all to all gather
+  MPI_Allgather(&D[MY_ID*range], range*512, MPI_C_COMPLEX, &D_i[0], (range)*512, MPI_C_COMPLEX, MPI_COMM_WORLD);
+  
+  // do transpose
+  transpose(D_i);
+
+  //do T4 part B
+  c_fft1d((complex *)&D_i[range*MY_ID], range, -1);
+  
+  //all to all gather
+  MPI_Allgather(&D_i[MY_ID*range], range*512, MPI_C_COMPLEX, &D[0], (range)*512, MPI_C_COMPLEX, MPI_COMM_WORLD); 
 }
 
 

@@ -10,9 +10,9 @@
 #+HTML_HEAD: <link rel="stylesheet" type="text/css" href="../css/notebook.css" />
 
 * How to install
-./setup.sh 
+on my mac: mpicc-mpich-gcc6 -o project project.c 
 
-The setup file compiles the project source code.
+This compiles the project source code.
 
 * Usage
   Usage: mpirun -np 8 ./project ALGO \n");
@@ -25,12 +25,29 @@ The setup file compiles the project source code.
 
 * Algorithms
 ** ALGO 1
+   This algorithm relies only on *MPI_Send* and *MPI_Recv* calls. 
+ The algorithm starts by having each process read in the two input files into local global memory.
+ The processes then compute the row-wise Fast Fourier Transform of 512/number of processors number of rows.
+ The processes then each send the row-wise FFTs to the root node, which then computes the transpose and scatters
+the requisite rows back to the regular nodes. This involves 2*num_procs MPI_Recvs and 2*num_procs MPI_Sends for the root node.
+ Each other node only sends 2 Recvs and Sends respectively. The next step is another FFT. Then return the data to the root like before,
+ and then calculate C = MM_point(A,B) of 512/num_procs rows of C per processor.
+ Finally the process for the inverse FFT is the same as for task 1 and 2. In this algorithm I do task 1 and 2 at the same time, then task 3 followed by task 4.
 
 ** ALGO 2
+   This algorithm is very similar to the previous one. However the major difference is that instead of gathering information at the root iteratively,
+ this algorithm uses MPI_AllGather which enables each process to send and recieve the full matricies faster.
+
 
 ** ALGO 3
+   This algorithm is split into 4 groups. Group 1 and 2 work on computing task 1 and 2 respectively. When they finish computing, they send 
+ their data to all the processes in group 3. At this point group 3 processes work on task 3. When the matrix C is computed they send 
+ the result to all processes in group 4. Group 4 computes the reverse FFT to obtain D.
+
 
 ** ALGO 4
+
+This algorithm is a sequential implemenation of the project to use as a baseline. No MPI is invilved here.
 
 * Results
 
