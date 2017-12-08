@@ -10,18 +10,18 @@
 #+HTML_HEAD: <link rel="stylesheet" type="text/css" href="../css/notebook.css" />
 
 * How to install
-on my mac: mpicc-mpich-gcc6 -o project project.c 
+ - on my mac: mpicc-mpich-gcc6 -o project project.c (depends on compiler)
 
-This compiles the project source code.
+- This compiles the project source code.
 
 * Usage
-  Usage: mpirun -np 8 ./project ALGO \n");
-  Where ALGO = 1, 2, 3, or 4
-  algo 1 is part a
-  algo 2 is part b
-  algo 3 is part c
-  algo 4 is a serial implementation (No parallelism)
-  and number of processors is 1 for algo 4, 8 for algo 3 and 2, 4, or 8 for algos 1 and 2
+  - Usage: mpirun -np 8 ./project ALGO \n");
+  - Where ALGO = 1, 2, 3, or 4
+  - algo 1 is part a
+  - algo 2 is part b
+  - algo 3 is part c
+  - algo 4 is a serial implementation (No parallelism)
+  - and number of processors is 1 for algo 4, 8 for algo 3 and 2, 4, or 8 for algos 1 and 2
 
 * Algorithms
 ** ALGO 1
@@ -34,42 +34,60 @@ the requisite rows back to the regular nodes. This involves 2*num_procs MPI_Recv
  and then calculate C = MM_point(A,B) of 512/num_procs rows of C per processor.
  Finally the process for the inverse FFT is the same as for task 1 and 2. In this algorithm I do task 1 and 2 at the same time, then task 3 followed by task 4.
 
+| #procs |     2 |     4 |     8 |
+|--------+-------+-------+-------|
+| algo1  | 0.014 | 0.018 | 0.034 |
+
+From the data we can see that the amount of synchronization and communication overhead causes the speedup to become worse with the number of processors added.
+
+
 ** ALGO 2
    This algorithm is very similar to the previous one. However the major difference is that instead of gathering information at the root iteratively,
  this algorithm uses MPI_AllGather which enables each process to send and recieve the full matricies faster.
 
+| #procs |     2 |     4 |     8 |
+|--------+-------+-------+-------|
+| algo2  | 0.015 | 0.015 | 0.018 |
+
+Here the data shows us that there is no performance improvement or significant reduction of performance when increasing number of processors.
+This is likely because the MPI communication pattern is more efficient.
 
 ** ALGO 3
    This algorithm is split into 4 groups. Group 1 and 2 work on computing task 1 and 2 respectively. When they finish computing, they send 
  their data to all the processes in group 3. At this point group 3 processes work on task 3. When the matrix C is computed they send 
  the result to all processes in group 4. Group 4 computes the reverse FFT to obtain D.
 
+| #procs |   2 |   4 |     8 |
+|--------+-----+-----+-------|
+| algo3  | --- | --- | 0.032 |
+
+Here we see that the performance is about equal to algorithm 1  but not as good as algorithm 2. This is likely because there is less parallelism.
+ Tasks 3 and 4 need to wait until all previous tasks are finished running.
+
 
 ** ALGO 4
 
 This algorithm is a sequential implemenation of the project to use as a baseline. No MPI is invilved here.
 
+
+| #procs |     1 |   2 |   4 |   8 |
+|--------+-------+-----+-----+-----|
+| algo4  | 0.013 | --- | --- | --- |
+
+Sequential is fast because the input sizes are not that large.
+
 * Results
 
 
-Empirical data from Comet on XSEDE using sequential and CUDA 7.0 shows Execution time of:
-| N              | 100     | 1000    | 10000   | 25000 |
-|----------------+---------+---------+---------+-------|
-| Serial Version | 0.539 s | 60.46 s | --- s   | --- s |
-| Cuda Version   | 0.036 s | 0.986 s | 73.86 s | --- s |
+Empirical data from Comet on XSEDE 
 
+| #procs | 1     |     2 |     4 |     8 |
+|--------+-------+-------+-------+-------|
+| algo1  | ---   | 0.014 | 0.018 | 0.034 |
+| algo2  | ---   | 0.015 | 0.015 | 0.018 |
+| algo3  | ---   |   --- |   --- | 0.032 |
+| algo4  | 0.013 |   --- |   --- | ---   |
 
-Empirical data from Comet on XSEDE using sequential and CUDA 7.0 shows Execution time per frame of:
-| N              | 100       | 1000     | 10000    | 25000  |
-|----------------+-----------+----------+----------+-------|
-| Serial Version | 0.00061 s | 0.068 s  | --- s    | --- s |
-| Cuda Version   | 0.00004 s | 0.0012 s | 0.0845 s | --- s |
-
-
-
-
-* Screenshots
-  Screen shots can be found in ./results/* 
 
 * Reference
   - https://stackoverflow.com/questions/459691/best-timing-method-in-c
